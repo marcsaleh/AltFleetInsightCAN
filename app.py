@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Display the logo
 #st.image("logo_white_background.jpg", use_column_width=True)
@@ -708,7 +706,6 @@ def get_user_depreciation_rates():
 
 existing_vehicle_depreciation, alternative_vehicle_depreciation = get_user_depreciation_rates()
 
-import streamlit as st
 
 def collect_charging_refuelling_infrastrcture_costs(evaluated_fuel, chargingInfra_info):
     if evaluated_fuel:
@@ -769,21 +766,11 @@ charging_station_costs, infra_constr_grid_upgrade_costs, total_infra_cost, user_
 #st.write(f"Total Charging-Refueling Infrastructure costs: ${charging_refuelling_infra_cost} per unit")
 #st.write(f"Total Charging-Refuelling Infrastructure subsidy: ${user_chargerRefuelling_incentive_amount} per unit")
 
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import streamlit as st
 
 st.header("5. Results")
 st.subheader("5.1 Project costs")
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import streamlit as st
-import altair as alt
-import plotly.express as px
+
 import plotly.graph_objects as go
 
 
@@ -1124,8 +1111,6 @@ else:
     existing_total_GHG_emissions, alternative_total_GHG_emissions = None, None
     "Please complete previous sections first."
 
-
-import matplotlib.pyplot as plt
 
 # NOx and PM2.5 emission
 def estimateNOXPM_emissions(existing_fuel, evaluated_fuel, n_alternative_fuel_vehicles, vehicle_lifetime, daily_distance, yearly_days_operations, energy_price_province, vehicles_info):
