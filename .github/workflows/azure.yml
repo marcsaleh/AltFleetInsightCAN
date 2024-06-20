@@ -33,8 +33,6 @@ jobs:
       - name: Make startup script executable
         run: chmod +x startup.sh
 
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
-
       - name: Zip artifact for deployment
         run: zip -r release.zip . -x "*.git*" "venv/*"
 
