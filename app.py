@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import os
 
 # Display the logo
 #st.image("logo_white_background.jpg", use_column_width=True)
