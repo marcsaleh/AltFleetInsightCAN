@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 
 # Display the logo
 #st.image("logo_white_background.jpg", use_column_width=True)
@@ -769,9 +770,6 @@ charging_station_costs, infra_constr_grid_upgrade_costs, total_infra_cost, user_
 
 st.header("5. Results")
 st.subheader("5.1 Project costs")
-
-
-import plotly.graph_objects as go
 
 
 def discounted_TCO(base_tech, alternative_tech, n_vehicles, basevehicle_cost, altvehicle_cost, refueling_station_cost,
