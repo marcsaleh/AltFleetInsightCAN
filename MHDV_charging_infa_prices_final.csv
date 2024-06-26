@@ -1,29 +1,15 @@
-PowerLevel,PortConfiguration,Price,
-7.7 kW,Single port,4050,
-11.5 kW,Single port,4725,
-19.2 kW,Single port,6750,
-19.2 kW,Dual port,7500,
-24 kW,Single port,23000,
-24 kW,Dual port,25000,
-50 kW,Single port,43200,
-50 kW,Dual port,46000,
-100 kW,Single port,60000,
-100 kW,Dual port,63200,
-175 kW,Single port,145800,
-175 kW,Dual port,153900,
-350 kW,Single port,216000,
-350 kW,Dual port,220000,
-,,,
-,,,
-,,,
-,,,
-,,,
-,,,
-,,,
-,,,
-,,,
-,,,
-,,,
-,,,
-,,,
-,,,
+PowerLevel,PortConfiguration,Price
+7.7 kW,Single port,4050
+11.5 kW,Single port,4725
+19.2 kW,Single port,6750
+19.2 kW,Dual port,7500
+24 kW,Single port,23000
+24 kW,Dual port,25000
+50 kW,Single port,43200
+50 kW,Dual port,46000
+100 kW,Single port,60000
+100 kW,Dual port,63200
+175 kW,Single port,145800
+175 kW,Dual port,153900
+350 kW,Single port,216000
+350 kW,Dual port,220000

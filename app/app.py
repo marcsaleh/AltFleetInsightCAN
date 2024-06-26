@@ -2,6 +2,18 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
+# Set the page config with a custom title, favicon, and hide the Streamlit menu
+st.set_page_config(
+    page_title="AltFleet Insight",  # Custom tab title
+    page_icon="logo_white_background - Copy.jpg",  # Path to your custom favicon
+    #initial_sidebar_state="collapsed",  # Collapse the sidebar initially
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None
+    }
+)
+
 # Display the logo
 #st.image("logo_white_background.jpg", use_column_width=True)
 
@@ -11,10 +23,11 @@ import plotly.graph_objects as go
 st.sidebar.title("About AltFleet Insight")
 
 st.sidebar.markdown("""
-AltFleet Insight enables users to select their MHDV market of operations and assess the economic implications of deploying alternative fuel technologies using a one-to-one replacement strategy. 
-It covers diesel, biodiesel (B20), renewable diesel (R99), and battery electric technologies for all applications, with gasoline, hybrid, and hydrogen fuel cell powertrains available for select markets of operation based on data availability.
+AltFleet Insight allows users to select their Medium and Heavy-Duty Vehicle market of operations and assess the economic implications of deploying alternative fuel technologies using a one-to-one replacement strategy.
+                     
+The tool covers diesel, biodiesel (B20), renewable diesel (R99), and battery electric powertrains for all applications. Additionally, gasoline, hybrid, and hydrogen fuel cell powertrains are available for select markets based on data availability.
 
-This tool is primarily intended to assess different technologies while leveraging financial incentives for small pilot vehicle deployments in Canada. Users should not expect a full fleet transition based on this tool alone.
+AltFleet Insight is designed primarily to assess the financial feasibility of different powertrains while leveraging financial incentives for small pilot vehicle deployments in Canada. Users should be aware that this tool is not intended for planning a full fleet transition.
 """)
 
 # Add the Vehicle Class Incentive Table
@@ -68,7 +81,7 @@ st.sidebar.markdown("""
 st.title('AltFleet Insight')
 
 # Automatically load datasets at the start of the app
-@st.cache_data
+#@st.cache_data
 def load_datasets():
     """
     Loads various datasets required for the total cost of ownership (TCO) analysis tool.
