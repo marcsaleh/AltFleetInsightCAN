@@ -97,7 +97,7 @@ st.sidebar.markdown("""
 st.sidebar.title("Disclaimers")
 
 st.sidebar.markdown("""
-- This tool is provided for informational purposes only. The operations and environmental benefits analysis is based on assumptions regarding costs, charging patterns, rates, and other factors. The results of the analysis are approximations and are subject to change. Mobility Futures Lab, Delphi, and the Canadian Transportation Alliance make no warranty, representation, or undertaking, express or implied, as to the accuracy, reliability, or completeness of this analysis.
+- This tool is provided for informational purposes only. The operations and environmental benefits analysis is based on assumptions regarding costs, charging patterns, rates, and other factors. The results of the analysis are approximations and are subject to change. Mobility Futures Lab, Delphi, and the Canadian Transportation Council make no warranty, representation, or undertaking, express or implied, as to the accuracy, reliability, or completeness of this analysis.
 
 - All values, including vehicle prices, are based on the best available estimates and can be adjusted as needed.
 
@@ -1047,7 +1047,6 @@ def discounted_TCO(base_tech, alternative_tech, n_vehicles, basevehicle_cost, al
 
     return fig, df_total_cost
 
-
 def analyze_break_even_points_interpolated(df_total_cost, base_tech, alternative_tech):
     """
     Analyze the break-even points between base technology and alternative technology with and without subsidies,
@@ -1066,6 +1065,9 @@ def analyze_break_even_points_interpolated(df_total_cost, base_tech, alternative
     exact_break_even_year_without_subsidy = None
     exact_break_even_year_with_subsidy = None
 
+    # Check if there are any valid incentive values in the DataFrame
+    has_incentive_data = df_total_cost['DCO_alternative_Withincentive'].notna().any()
+
     # Loop through each year in the DataFrame to find approximate break-even points
     for index in range(1, len(df_total_cost)):  # Start from the second row
         previous_row = df_total_cost.iloc[index - 1]
@@ -1076,24 +1078,25 @@ def analyze_break_even_points_interpolated(df_total_cost, base_tech, alternative
             # Linear interpolation for more exact break-even year
             exact_break_even_year_without_subsidy = previous_row['Year'] + (current_row['Year'] - previous_row['Year']) * ((previous_row['DCO_base'] - previous_row['DCO_alternative']) / (current_row['DCO_alternative'] - previous_row['DCO_alternative'] + previous_row['DCO_base'] - current_row['DCO_base']))
 
-        # Check for break-even between this year and the previous year with subsidies
-        if exact_break_even_year_with_subsidy is None and 'DCO_alternative_Withincentive' in df_total_cost.columns:
+        # Check for break-even between this year and the previous year with subsidies if incentive data is available
+        if has_incentive_data and exact_break_even_year_with_subsidy is None:
             if previous_row['DCO_alternative_Withincentive'] > previous_row['DCO_base'] and current_row['DCO_alternative_Withincentive'] <= current_row['DCO_base']:
                 # Linear interpolation for more exact break-even year
                 exact_break_even_year_with_subsidy = previous_row['Year'] + (current_row['Year'] - previous_row['Year']) * ((previous_row['DCO_base'] - previous_row['DCO_alternative_Withincentive']) / (current_row['DCO_alternative_Withincentive'] - previous_row['DCO_alternative_Withincentive'] + previous_row['DCO_base'] - current_row['DCO_base']))
 
     # Write the results of the break-even analysis with interpolated years
-    #st.write("#### Interpolated Break-even Analysis")
+    # Display break-even without subsidy if it exists
     if exact_break_even_year_without_subsidy is not None:
-        st.write(f" {alternative_tech} technology without subsidies reaches break-even with {base_tech} at year {exact_break_even_year_without_subsidy:.2f}.")
+        st.write(f"{alternative_tech} technology without subsidies reaches break-even with {base_tech} at year {exact_break_even_year_without_subsidy:.2f}.")
     else:
-        st.write(f" {alternative_tech} technology without subsidies does not reach break-even with {base_tech} within the evaluated period.")
+        st.write(f"{alternative_tech} technology without subsidies does not reach break-even with {base_tech} within the evaluated period.")
     
-    if exact_break_even_year_with_subsidy is not None:
-        st.write(f" {alternative_tech} technology with subsidies reaches break-even with {base_tech} at year {exact_break_even_year_with_subsidy:.2f}.")
-    else:
-        st.write(f" {alternative_tech} technology with subsidies does not reach break-even with {base_tech} within the evaluated period.")
-
+    # Display break-even with subsidy only if there are valid incentive values
+    if has_incentive_data:
+        if exact_break_even_year_with_subsidy is not None:
+            st.write(f"{alternative_tech} technology with subsidies reaches break-even with {base_tech} at year {exact_break_even_year_with_subsidy:.2f}.")
+        else:
+            st.write(f"{alternative_tech} technology with subsidies does not reach break-even with {base_tech} within the evaluated period.")
 
 
 def stacked_bar_DCO(base_tech, alternative_tech, n_vehicles, basevehicle_cost, altvehicle_cost, refueling_station_cost,
