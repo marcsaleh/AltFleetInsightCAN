@@ -2,6 +2,39 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
+import uuid
+from datetime import datetime
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+import logging
+
+# Replace with your Azure Application Insights Connection String
+CONNECTION_STRING = "InstrumentationKey=1bfd726d-248f-4e18-b7ee-1120754b269d;IngestionEndpoint=https://canadaeast-0.in.applicationinsights.azure.com/;ApplicationId=9b560c6b-e40a-4fb0-9b5f-508e3a560dc0"
+
+## Set up logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(AzureLogHandler(connection_string=CONNECTION_STRING))
+
+# Track unique sessions
+if "session_id" not in st.session_state:
+    st.session_state["session_id"] = str(uuid.uuid4())  # Generate a unique session ID
+    session_start_time = datetime.now().isoformat()
+    logger.info(f"New user session: {st.session_state['session_id']} at {session_start_time}")
+
+
+
+# Set the page config with a custom title, favicon, and hide the Streamlit menu
+st.set_page_config(
+    page_title="AltFleet Insight",  # Custom tab title
+    page_icon="logo_white_background - Copy.jpg",  # Path to your custom favicon
+    #initial_sidebar_state="collapsed",  # Collapse the sidebar initially
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None
+    }
+)
+
 # Set the page config with a custom title, favicon, and hide the Streamlit menu
 st.set_page_config(
     page_title="AltFleet Insight",  # Custom tab title
