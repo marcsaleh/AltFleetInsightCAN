@@ -2,6 +2,18 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
+# Set the page config with a custom title, favicon, and hide the Streamlit menu
+st.set_page_config(
+    page_title="AltFleet Insight",  # Custom tab title
+    page_icon="logo_white_background - Copy.jpg",  # Path to your custom favicon
+    #initial_sidebar_state="collapsed",  # Collapse the sidebar initially
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None
+    }
+)
+
 import uuid
 from datetime import datetime
 from opencensus.ext.azure.log_exporter import AzureLogHandler
@@ -23,29 +35,6 @@ if "session_id" not in st.session_state:
 
 
 
-# Set the page config with a custom title, favicon, and hide the Streamlit menu
-st.set_page_config(
-    page_title="AltFleet Insight",  # Custom tab title
-    page_icon="logo_white_background - Copy.jpg",  # Path to your custom favicon
-    #initial_sidebar_state="collapsed",  # Collapse the sidebar initially
-    menu_items={
-        'Get Help': None,
-        'Report a bug': None,
-        'About': None
-    }
-)
-
-# Set the page config with a custom title, favicon, and hide the Streamlit menu
-st.set_page_config(
-    page_title="AltFleet Insight",  # Custom tab title
-    page_icon="logo_white_background - Copy.jpg",  # Path to your custom favicon
-    #initial_sidebar_state="collapsed",  # Collapse the sidebar initially
-    menu_items={
-        'Get Help': None,
-        'Report a bug': None,
-        'About': None
-    }
-)
 
 # Display the logo
 #st.image("logo_white_background.jpg", use_column_width=True)
