@@ -44,89 +44,84 @@ if "session_id" not in st.session_state:
 # Sidebar with about section
 st.sidebar.title("About AltFleet Insight")
 
+# Sidebar: About section
 st.sidebar.markdown("""
-AltFleet Insight allows users to select their Medium and Heavy-Duty Vehicle market of operations and assess the economic implications of deploying alternative fuel technologies using a one-to-one replacement strategy.
-                     
-The tool covers diesel, biodiesel (B20), renewable diesel (R99), and battery electric powertrains for all applications. Additionally, gasoline, hybrid, and hydrogen fuel cell powertrains are available for select markets based on data availability.
+    **AltFleet Insight** helps Canadian Medium and Heavy-Duty Vehicle (MHDV) operators evaluate the **economic and environmental impact** of alternative fuel technologies using a **one-to-one replacement strategy** for **small-scale deployments**, not full fleet transitions.
 
-AltFleet Insight is designed primarily to assess the financial feasibility of different powertrains while leveraging financial incentives for small pilot vehicle deployments in Canada. Users should be aware that this tool is not intended for planning a full fleet transition.
+    ### 🔹 **What the Tool Does**
+    ✅ **Covers multiple fuel types**  
+    - Supports **diesel, biodiesel (B20), renewable diesel (R99), and battery electric** across all applications.  
+    - Includes **gasoline, hybrid EV, and hydrogen fuel cell** where data is available.  
+
+    ✅ **Cost & emissions insights**  
+    - Assesses **cumulative net present value (NPV) costs** over a vehicle’s lifetime, comparing scenarios with and without incentives
+    - Estimates **well-to-wheel GHG emissions** based on powertrain and fuel type.  
+    - Evaluates **tailpipe NOx and PM₂.₅ emissions** to assess air quality impacts.
 """)
 
-# Add the Vehicle Class Incentive Table
-st.sidebar.title("Federal iMHZEV Incentive Program Amounts (Available for up to 5 vehicles per year)")
+# Expandable Section for Incentives
+with st.sidebar.expander("🔹 Federal & Provincial Incentives (as of June 2024)"):
+    
+    # Federal Incentive Program
+    st.markdown("### **Federal iMHZEV Incentive Program** (Max: 5 vehicles/year)")
+    
+    vehicle_data = {
+        "Vehicle Class": [
+            "Class 7/8 Coach Bus, Class 8 FCEVs",
+            "Class 8 (350 kWh and up) BEVs",
+            "Class 8 (Under 350 kWh) BEVs",
+            "Class 7",
+            "Class 6",
+            "Class 5",
+            "Class 4",
+            "Class 3",
+            "Class 2B"
+        ],
+        "Maximum Incentive": [
+            "$200,000", "$150,000", "$100,000", "$100,000", "$100,000",
+            "$75,000", "$75,000", "$40,000", "$10,000"
+        ]
+    }
+    vehicle_df = pd.DataFrame(vehicle_data)
+    st.markdown(vehicle_df.to_html(index=False), unsafe_allow_html=True)
 
-vehicle_data = {
-    "Vehicle Class": [
-        "Class 7/8 COACH BUS, Class 8 FCEVS",
-        "Class 8 (350 kWh and up)",
-        "Class 8 (Under 350 kWh)",
-        "Class 7",
-        "Class 6",
-        "Class 5",
-        "Class 4",
-        "Class 3",
-        "Class 2B"
-    ],
-    "Maximum Amount": [
-        "$200,000",
-        "$150,000",
-        "$100,000",
-        "$100,000",
-        "$100,000",
-        "$75,000",
-        "$75,000",
-        "$40,000",
-        "$10,000"
-    ]
-}
+    # Provincial Incentives Table with Hyperlinks
+    st.markdown("### **Stackable Provincial Incentives**")
+    
+    incentive_data = {
+        "Province": [
+            "British Columbia", 
+            "Nova Scotia", 
+            "Quebec"
+        ],
+        "Program": [
+            f'<a href="https://www.goelectricotherrebates.ca/rebate/rebates-for-fleets-and-organizations" target="_blank">CleanBC Go Electric Program</a>',
+            f'<a href="https://evassist.ca/rebates/mhzev/" target="_blank">Electrify Nova Scotia Rebate Program</a>',
+            f'<a href="https://www.transports.gouv.qc.ca/fr/aide-finan/entreprises-camionnage/aide-ecocamionnage/Pages/aide-ecocamionnage.aspx" target="_blank">Écocamionnage Program</a>'
+        ]
+    }
+    incentive_df = pd.DataFrame(incentive_data)
+    st.markdown(incentive_df.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-vehicle_df = pd.DataFrame(vehicle_data)
-
-# Display the table without the index column
-st.sidebar.write(vehicle_df.to_html(index=False), unsafe_allow_html=True)
-
-# Add the Province and Program Incentive Table
-st.sidebar.title("Provinces where stackable financial incentives are available as of June 2024:")
-
-# Create the data for provinces and their respective MHDV incentive programs
-incentive_data = {
-    "Province": [
-        "British Columbia", 
-        "Nova Scotia", 
-        "Quebec"
-    ],
-    "Program Name": [
-        "CleanBC Go Electric Program", 
-        "Electrify Nova Scotia Rebate Program", 
-        "Écocamionnage Program"
-    ]
-}
-
-# Create a DataFrame
-incentive_df = pd.DataFrame(incentive_data)
-
-# Display the table without the index column
-st.sidebar.write(incentive_df.to_html(index=False), unsafe_allow_html=True)
-
-# Add info on public transit and school buses
-#st.sidebar.title(")
-
+# Public Transit & School Bus Funding
+st.sidebar.subheader("🔹 Public Transit & School Bus Funding")
 st.sidebar.markdown("""
-&nbsp;  
-- Public transit and school bus deployments are eligible for up to 50% funding for both vehicles and infrastructure through the Federal Zero Emission Transit Fund, pending project submission and assessment.""")
-
-# Sidebar with disclaimers
-st.sidebar.title("Disclaimers")
-
-st.sidebar.markdown("""
-- This tool is provided for informational purposes only. The operations and environmental benefits analysis is based on assumptions regarding costs, charging patterns, rates, and other factors. The results of the analysis are approximations and are subject to change. Mobility Futures Lab, Delphi, and the Canadian Transportation Council make no warranty, representation, or undertaking, express or implied, as to the accuracy, reliability, or completeness of this analysis.
-
-- All values, including vehicle prices, are based on the best available estimates and can be adjusted as needed.
-
-# Contact:
-- For any issues or questions about using this tool, please contact **altfleet@mobilityfutureslab.ca**.
+- Eligible for **up to 50% funding** for vehicles and infrastructure.
+- Funded through the **Federal Zero Emission Transit Fund**.
+- Subject to project submission and approval.
 """)
 
+# Disclaimers (Outside Expander for Transparency)
+st.sidebar.subheader("🔹 Disclaimers")
+st.sidebar.markdown("""
+- This tool is for informational purposes only. Economic and environmental estimates are based on assumptions about costs, charging patterns, and other factors. Results are **approximate** and subject to change.
+- Mobility Futures Lab, Delphi, and the Canadian Transportation Council do **not** guarantee the accuracy or completeness of the analysis.
+- Vehicle prices and cost assumptions can be adjusted as needed.
+""")
+
+# Contact Info
+st.sidebar.subheader("🔹 Contact")
+st.sidebar.markdown("For any issues or questions, email **altfleet@mobilityfutureslab.ca**.")
 
 # Main app title (if you haven't added it already)
 st.title('AltFleet Insight')
@@ -617,7 +612,7 @@ def get_user_vehicle_incentive_amount():
         value=0.0,      # Default value set to 0.0
         step=5000.0,     # Step size to increment the subsidy amount
         format="%.2f",   # Format the input to display two decimal places
-        help="Use the amount presented in the sidebar for applications outside of school bus and public transit. Add provincial incentives where applicable, depending on program eligibility and stackable options."
+        help="Apply the federal incentive amount shown in the sidebar for all applications except school buses and public transit. Include applicable provincial incentives based on program eligibility and stackable options"
     )
     
     # Return the subsidy amount; returns 0 if no value is entered
