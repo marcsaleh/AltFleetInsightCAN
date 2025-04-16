@@ -63,7 +63,7 @@ st.sidebar.markdown("""
 with st.sidebar.expander("🔹 Federal & Provincial Incentives (as of June 2024)"):
     
     # Federal Incentive Program
-    st.markdown("### **Federal iMHZEV Incentive Program** (Max: 5 vehicles/year)")
+    st.markdown("### **Federal iMHZEV Incentive Program** (Max: 10 vehicles/year)")
     
     vehicle_data = {
         "Vehicle Class": [
