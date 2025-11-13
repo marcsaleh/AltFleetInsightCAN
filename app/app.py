@@ -1115,45 +1115,69 @@ def analyze_break_even_points_interpolated(df_total_cost, base_tech, alternative
         else:
             st.write(f"{alternative_tech} technology with subsidies does not reach break-even with {base_tech} within the evaluated period.")
 
+import pandas as pd
+import plotly.graph_objects as go
 
-def stacked_bar_DCO(base_tech, alternative_tech, n_vehicles, basevehicle_cost, altvehicle_cost, refueling_station_cost,
-                    refueling_station_infra, maintenance_base, maintenance_alt, fuel_base, fuel_alt, v_lifetime,
-                    daily_distance, days_operation, vehicle_subsidy, infrastructure_subsidy, discount_rate, user_province, energy_price_province, total_infra_cost,
-                    existing_vehicle_insurance, alternative_vehicle_insurance, existing_vehicle_depreciation, alternative_vehicle_depreciation,
-                    financing_period=None, downpayment=None, financing_rate=None):
-    
-    # Determine tax rate per province
-    provincial_tax = energy_price_province.loc[(energy_price_province['province'] == user_province)]['taxes_perc'].iloc[0] / 100
-    
-    # Initialize variables for financing
-    if financing_period is None:
-        financing_period = 0  # Default to no financing
-    if downpayment is None:
-        downpayment = 100.0  # Default to full payment upfront
-    if financing_rate is None:
-        financing_rate = 0.0  # Default to no interest
-    
-    downpayment /= 100  # Convert downpayment percentage
-    financing_rate /= 100  # Convert financing rate percentage
-    
-    # Adjust vehicle costs for downpayment and tax
-    loan_amount_base = basevehicle_cost * n_vehicles * (1 - downpayment)
-    loan_amount_alt = altvehicle_cost * n_vehicles * (1 - downpayment)
-    
-    # If subsidies are present, reduce the alternative vehicle cost
-    loan_amount_alt_with_subsidy =  (altvehicle_cost - vehicle_subsidy) * n_vehicles * (1 - downpayment)
-    
-    # Calculate annual payments for financing, if any
-    if financing_period > 0:
-        annual_payment_base = (loan_amount_base * financing_rate) / (1 - (1 + financing_rate) ** -financing_period)
-        annual_payment_alt = (loan_amount_alt * financing_rate) / (1 - (1 + financing_rate) ** -financing_period)
-        annual_payment_alt_with_subsidy = (loan_amount_alt_with_subsidy * financing_rate) / (1 - (1 + financing_rate) ** -financing_period)
+import pandas as pd
+import plotly.graph_objects as go
+
+def stacked_bar_DCO(
+    base_tech, alternative_tech, n_vehicles, basevehicle_cost, altvehicle_cost,
+    refueling_station_cost, refueling_station_infra, maintenance_base,
+    maintenance_alt, fuel_base, fuel_alt, v_lifetime, daily_distance,
+    days_operation, vehicle_subsidy, infrastructure_subsidy, discount_rate,
+    user_province, energy_price_province, total_infra_cost,
+    existing_vehicle_insurance, alternative_vehicle_insurance,
+    existing_vehicle_depreciation, alternative_vehicle_depreciation,
+    financing_period=None, downpayment=None, financing_rate=None
+):
+    # ---------- Numeric conversions ----------
+    n_vehicles = float(n_vehicles)
+    basevehicle_cost = float(basevehicle_cost)
+    altvehicle_cost = float(altvehicle_cost)
+    maintenance_base = float(maintenance_base)
+    maintenance_alt = float(maintenance_alt)
+    fuel_base = float(fuel_base)
+    fuel_alt = float(fuel_alt)
+    daily_distance = float(daily_distance)
+    days_operation = float(days_operation)
+    v_lifetime = int(v_lifetime)
+    vehicle_subsidy = float(vehicle_subsidy)
+    infrastructure_subsidy = float(infrastructure_subsidy)
+    discount_rate = float(discount_rate)
+
+    existing_vehicle_insurance = float(existing_vehicle_insurance or 0)
+    alternative_vehicle_insurance = float(alternative_vehicle_insurance or 0)
+
+    if existing_vehicle_depreciation not in [None, "", 0]:
+        existing_vehicle_depreciation = float(existing_vehicle_depreciation) / 100
     else:
-        annual_payment_base = 0
-        annual_payment_alt = 0
-        annual_payment_alt_with_subsidy = 0
-    
-    # Determine infrastructure label based on alternative technology
+        existing_vehicle_depreciation = None
+
+    if alternative_vehicle_depreciation not in [None, "", 0]:
+        alternative_vehicle_depreciation = float(alternative_vehicle_depreciation) / 100
+    else:
+        alternative_vehicle_depreciation = None
+
+    if financing_period is None:
+        financing_period = 0
+    if downpayment is None:
+        downpayment = 100
+    if financing_rate is None:
+        financing_rate = 0
+
+    financing_period = int(financing_period)
+    downpayment = float(downpayment) / 100
+    financing_rate = float(financing_rate) / 100
+
+    # ---------- Tax rate ----------
+    provincial_tax = (
+        energy_price_province.loc[
+            energy_price_province["province"] == user_province, "taxes_perc"
+        ].iloc[0] / 100
+    )
+
+    # ---------- Infra label ----------
     if alternative_tech == "Battery electric":
         infra_label = "Charging Infrastructure"
     elif alternative_tech in ["Biodiesel B20", "Hydrogen Fuel Cell"]:
@@ -1161,103 +1185,152 @@ def stacked_bar_DCO(base_tech, alternative_tech, n_vehicles, basevehicle_cost, a
     else:
         infra_label = "Charging/Refuelling Infrastructure"
 
-    # If subsidies are present, calculate and plot with subsidies
+    # ---------- Financing ----------
+    loan_amount_base = basevehicle_cost * n_vehicles * (1 - downpayment)
+    loan_amount_alt = altvehicle_cost * n_vehicles * (1 - downpayment)
+    loan_amount_alt_sub = (altvehicle_cost - vehicle_subsidy) * n_vehicles * (1 - downpayment)
+
+    if financing_period > 0 and financing_rate > 0:
+        ann_pay_base = (loan_amount_base * financing_rate) / (1 - (1 + financing_rate)**(-financing_period))
+        ann_pay_alt = (loan_amount_alt * financing_rate) / (1 - (1 + financing_rate)**(-financing_period))
+        ann_pay_alt_sub = (loan_amount_alt_sub * financing_rate) / (1 - (1 + financing_rate)**(-financing_period))
+    else:
+        ann_pay_base = ann_pay_alt = ann_pay_alt_sub = 0
+
+    # ---------- Initialize cost storage ----------
+    total_costs = {}
+
+    # Base tech
+    total_costs[base_tech] = {
+        "Vehicle": basevehicle_cost * n_vehicles * downpayment * (1 + provincial_tax),
+        "Maintenance": 0.0,
+        "Fuel": 0.0,
+        "Insurance": 0.0,
+        infra_label: 0.0,
+    }
+
+    # Alternative tech (no subsidy)
+    total_costs[alternative_tech] = {
+        "Vehicle": altvehicle_cost * n_vehicles * downpayment * (1 + provincial_tax),
+        "Maintenance": 0.0,
+        "Fuel": 0.0,
+        "Insurance": 0.0,
+        infra_label: total_infra_cost * (1 + provincial_tax),
+    }
+
+    # Alternative tech (with subsidies)
+    alt_sub_name = alternative_tech + " (with subsidies)"
     plot_incentive = vehicle_subsidy > 0 or infrastructure_subsidy > 0
 
-    # Initialize a dictionary to store total discounted costs
-    total_costs = {
-        base_tech: {'Vehicle': (basevehicle_cost * n_vehicles * downpayment) * (1 + provincial_tax), 'Maintenance': 0, 'Fuel': 0, 'Insurance': 0}
-    }
-    
-    # Include the infrastructure costs if total_infra_cost is greater than zero
-    total_costs[alternative_tech] = {'Vehicle': (altvehicle_cost * n_vehicles * downpayment) * (1 + provincial_tax), infra_label: total_infra_cost * (1 + provincial_tax), 'Maintenance': 0, 'Fuel': 0, 'Insurance': 0}
-    
     if plot_incentive:
-        total_costs[alternative_tech + ' (with subsidies)'] = {'Vehicle': ((altvehicle_cost - vehicle_subsidy) * n_vehicles * downpayment) * (1 + provincial_tax), infra_label: (total_infra_cost - infrastructure_subsidy) * (1 + provincial_tax), 'Maintenance': 0, 'Fuel': 0, 'Insurance': 0}
+        total_costs[alt_sub_name] = {
+            "Vehicle": (altvehicle_cost - vehicle_subsidy) * n_vehicles * downpayment * (1 + provincial_tax),
+            "Maintenance": 0.0,
+            "Fuel": 0.0,
+            "Insurance": 0.0,
+            infra_label: (total_infra_cost - infrastructure_subsidy) * (1 + provincial_tax),
+        }
 
-    # Calculate total discounted costs for each category over the vehicle lifetime
+    # ---------- Discounted lifetime accumulation ----------
+    km_year = daily_distance * days_operation * n_vehicles
+
     for year in range(1, v_lifetime + 1):
-        discount_factor = 1 / ((1 + discount_rate) ** year)
-        total_costs[base_tech]['Maintenance'] += maintenance_base * daily_distance * days_operation * n_vehicles * discount_factor
-        total_costs[base_tech]['Fuel'] += fuel_base * daily_distance * days_operation * n_vehicles * discount_factor
-        if existing_vehicle_insurance not in [None, 0]:
-            total_costs[base_tech]['Insurance'] += existing_vehicle_insurance * daily_distance * days_operation * n_vehicles * discount_factor
-        
-        # Add vehicle financing costs to "Vehicle" category for base tech
+        df = 1 / ((1 + discount_rate) ** year)
+
+        # base tech
+        total_costs[base_tech]["Maintenance"] += maintenance_base * km_year * df
+        total_costs[base_tech]["Fuel"] += fuel_base * km_year * df
+        total_costs[base_tech]["Insurance"] += existing_vehicle_insurance * km_year * df
         if year <= financing_period:
-            total_costs[base_tech]['Vehicle'] += (annual_payment_base * discount_factor)
-        
-        # Handle alternative tech and alternative tech with subsidies
+            total_costs[base_tech]["Vehicle"] += ann_pay_base * df
+
+        # alternative techs
         for tech in total_costs.keys():
-            if tech != base_tech:
-                total_costs[tech]['Maintenance'] += maintenance_alt * daily_distance * days_operation * n_vehicles * discount_factor
-                total_costs[tech]['Fuel'] += fuel_alt * daily_distance * days_operation * n_vehicles * discount_factor
-                if alternative_vehicle_insurance not in [None, 0]:
-                    total_costs[tech]['Insurance'] += alternative_vehicle_insurance * daily_distance * days_operation * n_vehicles * discount_factor
-                
+            if tech == base_tech:
+                continue
+
+            total_costs[tech]["Maintenance"] += maintenance_alt * km_year * df
+            total_costs[tech]["Fuel"] += fuel_alt * km_year * df
+            total_costs[tech]["Insurance"] += alternative_vehicle_insurance * km_year * df
+
+            if year <= financing_period:
                 if tech == alternative_tech:
-                    if year <= financing_period:
-                        total_costs[tech]['Vehicle'] += (annual_payment_alt * discount_factor)
-                elif tech == alternative_tech + ' (with subsidies)':
-                    if year <= financing_period:
-                        # Use the correct loan amount for subsidized vehicle
-                        total_costs[tech]['Vehicle'] += (annual_payment_alt_with_subsidy * discount_factor)
+                    total_costs[tech]["Vehicle"] += ann_pay_alt * df
+                elif tech == alt_sub_name:
+                    total_costs[tech]["Vehicle"] += ann_pay_alt_sub * df
 
-    # Calculate resale value only if depreciation inputs are provided
-    if existing_vehicle_depreciation is not None and alternative_vehicle_depreciation is not None and existing_vehicle_depreciation != 0 and alternative_vehicle_depreciation != 0:
-        existing_vehicle_depreciation = float(existing_vehicle_depreciation) / 100
-        alternative_vehicle_depreciation = float(alternative_vehicle_depreciation) / 100
-        
-        resale_value_base = basevehicle_cost * (1 - existing_vehicle_depreciation) ** v_lifetime
-        resale_value_alt = altvehicle_cost * (1 - alternative_vehicle_depreciation) ** v_lifetime
+    # ---------- Resale ----------
+    if existing_vehicle_depreciation is not None:
+        resale_base = basevehicle_cost * (1 - existing_vehicle_depreciation)**v_lifetime * n_vehicles
+        resale_base /= (1 + discount_rate)**v_lifetime
+        total_costs[base_tech]["Vehicle"] = max(0, total_costs[base_tech]["Vehicle"] - resale_base)
 
-        # Subtract the present value of the resale value from the vehicle cost
-        total_costs[base_tech]['Vehicle'] -= resale_value_base / ((1 + discount_rate) ** v_lifetime)
+    if alternative_vehicle_depreciation is not None:
+        resale_alt = altvehicle_cost * (1 - alternative_vehicle_depreciation)**v_lifetime * n_vehicles
+        resale_alt /= (1 + discount_rate)**v_lifetime
         for tech in total_costs.keys():
             if tech != base_tech:
-                total_costs[tech]['Vehicle'] -= resale_value_alt / ((1 + discount_rate) ** v_lifetime)
-    
-    # Convert total costs to DataFrame for plotting
-    df_total_costs = pd.DataFrame(total_costs).transpose()
+                total_costs[tech]["Vehicle"] = max(0, total_costs[tech]["Vehicle"] - resale_alt)
 
-    # Define column order dynamically based on presence of infrastructure costs
-    columns = ['Vehicle', 'Maintenance', 'Fuel']
-    if total_infra_cost > 0:
-        columns.insert(1, infra_label)
-    if (existing_vehicle_insurance not in [None, 0]) and (alternative_vehicle_insurance not in [None, 0]):
-        columns.append('Insurance')
-    df_total_costs = df_total_costs[columns]  # Correct order of categories
+    # ---------- Build DataFrame ----------
+    df = pd.DataFrame(total_costs).transpose()
 
-    # Scaling for display
-    max_vehicle_cost = df_total_costs['Vehicle'].max()
-    ylabel = 'Total Costs (Thousands $)' if max_vehicle_cost < 1e6 else 'Total Costs (Millions $)'
-    df_total_costs /= 1e3 if max_vehicle_cost < 1e6 else 1e6
+    # Ensure uniform columns for stacking
+    for col in ["Vehicle", "Maintenance", "Fuel", "Insurance", infra_label]:
+        if col not in df.columns:
+            df[col] = 0.0
 
-    # Plotting the stacked bar chart
+    df = df[["Vehicle", infra_label, "Maintenance", "Fuel", "Insurance"]]
+
+    # ---------- Proportions for labels ----------
+    totals = df.sum(axis=1).replace(0, 1e-9)
+    df_props = df.div(totals, axis=0)
+
+    # ---------- Scaling ----------
+    max_vehicle_cost = df["Vehicle"].max()
+    if max_vehicle_cost < 1e6:
+        scale = 1e3
+        ylabel = "Total Costs (Thousands $)"
+    else:
+        scale = 1e6
+        ylabel = "Total Costs (Millions $)"
+
+    df_plot = df / scale
+
+    # ---------- Plot ----------
     fig = go.Figure()
+    colors = ["#215E21", "#507250", "#7E9E7E", "#AFCFAF", "#D3E6D3"]
 
-    # Add each category as a separate trace
-    colors = ['#215E21', '#507250', '#7E9E7E', '#AFCFAF', '#D3E6D3']
-    for i, column in enumerate(columns):
-        fig.add_trace(go.Bar(
-            x=df_total_costs.index,
-            y=df_total_costs[column].round(2),
-            name=column,
-            marker_color=colors[i],
-            hoverinfo='x+y'
-        ))
+    for i, col in enumerate(df_plot.columns):
+        fig.add_trace(
+            go.Bar(
+                x=df_plot.index,
+                y=df_plot[col],
+                name=col,
+                marker_color=colors[i % len(colors)],
+                text=(df_props[col] * 100).round(0).astype(int).astype(str) + "%",
+                textposition="inside",
+                hovertemplate=(
+                    "<b>%{x}</b><br>"
+                    + col + " cost: %{y:.2f}<br>"
+                    + col + " share: %{text}<extra></extra>"
+                ),
+            )
+        )
 
-    # Update layout
     fig.update_layout(
-        barmode='stack',
-        #title="Total Discounted Cost of Ownership",
-        #xaxis_title='Technology',
+        barmode="stack",
         yaxis_title=ylabel,
-        legend_title='Category',
-        legend=dict(x=1, y=0.5)
+        legend_title="Category",
+        legend=dict(x=1, y=0.5),
+        template="plotly_white",
+        paper_bgcolor="white",
+        plot_bgcolor="white",
     )
 
     return fig
+
+
 
 def calculate_NPV_and_percent_changes(base_tech, alternative_tech, n_vehicles, basevehicle_cost, altvehicle_cost, refueling_station_cost,
                                       refueling_station_infra, maintenance_base, maintenance_alt, fuel_base, fuel_alt, v_lifetime,
