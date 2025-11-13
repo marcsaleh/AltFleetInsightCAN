@@ -1240,7 +1240,8 @@ def stacked_bar_DCO(
         # base tech
         total_costs[base_tech]["Maintenance"] += maintenance_base * km_year * df
         total_costs[base_tech]["Fuel"] += fuel_base * km_year * df
-        total_costs[base_tech]["Insurance"] += existing_vehicle_insurance * km_year * df
+        if existing_vehicle_insurance > 0:
+            total_costs[base_tech]["Insurance"] += existing_vehicle_insurance * km_year * df
         if year <= financing_period:
             total_costs[base_tech]["Vehicle"] += ann_pay_base * df
 
@@ -1251,7 +1252,8 @@ def stacked_bar_DCO(
 
             total_costs[tech]["Maintenance"] += maintenance_alt * km_year * df
             total_costs[tech]["Fuel"] += fuel_alt * km_year * df
-            total_costs[tech]["Insurance"] += alternative_vehicle_insurance * km_year * df
+            if alternative_vehicle_insurance > 0:
+                total_costs[tech]["Insurance"] += alternative_vehicle_insurance * km_year * df
 
             if year <= financing_period:
                 if tech == alternative_tech:
@@ -1281,6 +1283,14 @@ def stacked_bar_DCO(
             df[col] = 0.0
 
     df = df[["Vehicle", infra_label, "Maintenance", "Fuel", "Insurance"]]
+
+    # ---- Drop Insurance if it's zero everywhere ----
+    if df["Insurance"].sum() == 0:
+        df = df.drop(columns=["Insurance"])
+
+    # ---- Drop infra column if zero everywhere (e.g. no infra cost) ----
+    if df[infra_label].sum() == 0:
+        df = df.drop(columns=[infra_label])
 
     # ---------- Proportions for labels ----------
     totals = df.sum(axis=1).replace(0, 1e-9)
